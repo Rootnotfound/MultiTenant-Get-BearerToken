@@ -43,9 +43,9 @@ namespace TodoListWebApp.Controllers
             //create an OAuth2 request, using the web app as the client.
             //this will trigger a consent flow that will provision the app in the target tenant
             string authorizationRequest = String.Format(
-                "https://login.windows.net/common/oauth2/authorize?response_type=code&client_id={0}&resource={1}&redirect_uri={2}&state={3}",
+                "https://login.chinacloudapi.cn/common/oauth2/authorize?response_type=code&client_id={0}&resource={1}&redirect_uri={2}&state={3}",
                  Uri.EscapeDataString(ConfigurationManager.AppSettings["ida:ClientID"]),
-                 Uri.EscapeDataString("https://graph.windows.net"),
+                 Uri.EscapeDataString("https://graph.chinacloudapi.cn"),
                  Uri.EscapeDataString(this.Request.Url.GetLeftPart(UriPartial.Authority).ToString() + "/Onboarding/ProcessCode"),
                  Uri.EscapeDataString(stateMarker)
                  );
@@ -72,16 +72,16 @@ namespace TodoListWebApp.Controllers
                 // ------get a token for the Graph, that will provide us with information abut the caller
                 ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
                                                                    ConfigurationManager.AppSettings["ida:Password"]);
-                AuthenticationContext authContext = new AuthenticationContext("https://login.windows.net/common/");
-                AuthenticationResult result = authContext.AcquireTokenByAuthorizationCode(
-                    code, new Uri(Request.Url.GetLeftPart(UriPartial.Path)), credential);
+                AuthenticationContext authContext = new AuthenticationContext("https://login.chinacloudapi.cn/common/");
+                AuthenticationResult result = authContext.AcquireTokenByAuthorizationCodeAsync(
+                    code, new Uri(Request.Url.GetLeftPart(UriPartial.Path)), credential).Result;
 
                 var myTenant = db.Tenants.FirstOrDefault(a => a.IssValue == state);
                 // if this was an admin consent, save the tenant
                 if (myTenant.AdminConsented)
                 {
                     // ------read the tenantID out of the Graph token and use it to create the issuer string
-                    string issuer = String.Format("https://sts.windows.net/{0}/", result.TenantId);
+                    string issuer = String.Format("https://sts.chinacloudapi.cn/{0}/", result.TenantId);
                     myTenant.IssValue = issuer;
                 }
                 else

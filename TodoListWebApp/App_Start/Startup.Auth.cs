@@ -19,10 +19,10 @@ namespace TodoListWebApp
     {
         private TodoListWebAppContext db = new TodoListWebAppContext();
         public void ConfigureAuth(IAppBuilder app)
-        {         
+        {
             string ClientId = ConfigurationManager.AppSettings["ida:ClientID"];
             //fixed address for multitenant apps in the public cloud
-            string Authority = "https://login.microsoftonline.com/common/";
+            string Authority = "https://login.chinacloudapi.cn/common/";
 
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
@@ -38,6 +38,7 @@ namespace TodoListWebApp
                         // instead of using the default validation (validating against a single issuer value, as we do in line of business apps), 
                         // we inject our own multitenant validation logic
                         ValidateIssuer = false,
+                        SaveSigninToken = true
                     },
                     Notifications = new OpenIdConnectAuthenticationNotifications()
                     {
@@ -46,7 +47,7 @@ namespace TodoListWebApp
                             // This ensures that the address used for sign in and sign out is picked up dynamically from the request
                             // this allows you to deploy your app (to Azure Web Sites, for example)without having to change settings
                             // Remember that the base URL of the address used here must be provisioned in Azure AD beforehand.
-                            string appBaseUrl = context.Request.Scheme + "://" + context.Request.Host + context.Request.PathBase;                         
+                            string appBaseUrl = context.Request.Scheme + "://" + context.Request.Host + context.Request.PathBase;
                             context.ProtocolMessage.RedirectUri = appBaseUrl;
                             context.ProtocolMessage.PostLogoutRedirectUri = appBaseUrl;
                             return Task.FromResult(0);
@@ -63,10 +64,10 @@ namespace TodoListWebApp
                                 // the caller comes from an admin-consented, recorded issuer
                                 (db.Tenants.FirstOrDefault(a => ((a.IssValue == issuer) && (a.AdminConsented))) == null)
                                 // the caller is recorded in the db of users who went through the individual onboardoing
-                                && (db.Users.FirstOrDefault(b =>((b.UPN == UPN) && (b.TenantID == tenantID))) == null)
+                                && (db.Users.FirstOrDefault(b => ((b.UPN == UPN) && (b.TenantID == tenantID))) == null)
                                 )
                                 // the caller was neither from a trusted issuer or a registered user - throw to block the authentication flow
-                                throw new SecurityTokenValidationException();                            
+                                throw new SecurityTokenValidationException();
                             return Task.FromResult(0);
                         },
                         AuthenticationFailed = (context) =>
